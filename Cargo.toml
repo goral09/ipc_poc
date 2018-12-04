@@ -1,0 +1,7 @@
+[package]
+name = "ipc_poc"
+version = "0.1.0"
+authors = ["Mateusz Górski <gorski.mateusz@protonmail.ch>"]
+
+[dependencies]
+clap = "2.32.0"
