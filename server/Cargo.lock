@@ -71,6 +71,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "commons"
+version = "0.1.0"
+dependencies = [
+ "protobuf 3.0.0 (git+https://github.com/stepancheg/rust-protobuf/)",
+ "protobuf-codegen 3.0.0 (git+https://github.com/stepancheg/rust-protobuf/)",
+ "protoc-rust 3.0.0 (git+https://github.com/stepancheg/rust-protobuf/)",
+ "serde 1.0.80 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_derive 1.0.80 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "crossbeam-channel"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -159,6 +170,7 @@ version = "0.1.0"
 dependencies = [
  "bincode 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "commons 0.1.0",
  "futures 0.1.25 (registry+https://github.com/rust-lang/crates.io-index)",
  "ipc-channel 0.11.3 (git+https://github.com/goral09/ipc-channel?branch=socket_name_input)",
  "libc 0.2.44 (registry+https://github.com/rust-lang/crates.io-index)",

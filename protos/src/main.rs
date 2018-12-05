@@ -5,7 +5,7 @@ pub use protobuf_codegen::Customize;
 
 fn main() {
     protoc_rust::run(protoc_rust::Args {
-        out_dir: "../server/src/",
+        out_dir: "../commons/src/",
         input: &["src/protos/models.proto"],
         includes: &["src/protos"],
         customize: Customize {

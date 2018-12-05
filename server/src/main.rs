@@ -1,22 +1,16 @@
-// In order to use the Serialize and Deserialize macros in the model,
-// we need to declare in the main module, that we are using them.
-#[macro_use]
-extern crate serde_derive;
 extern crate clap;
-extern crate ipc_channel;
+extern crate commons;
 extern crate libc;
 extern crate protobuf;
 extern crate serde;
 
+use commons::models::Person;
+use commons::networking::*;
+
 use clap::{App, Arg};
-use ipc::IpcOneShotServer;
-use ipc_channel::ipc;
+use std::io::prelude::*;
 use std::io::Error;
-use std::ptr;
-
-pub mod models;
-
-use models::Person;
+use std::os::unix::net::{UnixListener, UnixStream};
 
 pub struct Args<'a> {
     pub socket: &'a str,
@@ -31,30 +25,6 @@ pub unsafe fn fork<F: FnOnce()>(child_func: F) -> libc::pid_t {
             libc::exit(0);
         }
         pid => pid,
-    }
-}
-
-#[cfg(not(any(
-    feature = "force-inprocess",
-    target_os = "windows",
-    target_os = "android",
-    target_os = "ios"
-)))]
-pub trait Wait {
-    fn wait(self);
-}
-
-#[cfg(not(any(
-    feature = "force-inprocess",
-    target_os = "windows",
-    target_os = "android",
-    target_os = "ios"
-)))]
-impl Wait for libc::pid_t {
-    fn wait(self) {
-        unsafe {
-            libc::waitpid(self, ptr::null_mut(), 0);
-        }
     }
 }
 
@@ -74,19 +44,25 @@ fn main() {
     };
     let args = Args { socket, echo };
 
-    println!("Listening on `{}`. Is echo? {}.", args.socket, args.echo);
-
-    let (server, server_name) = IpcOneShotServer::<Person>::new(Some(socket)).unwrap();
-    println!("Server name: {}", server_name);
-    let (rec, send) = server.accept().unwrap();
-
-    let pid = unsafe {
-        fork(|| {
-            for event in rec.recv() {
-                println!("{:?}", event);
-            }
-        })
+    let listener = match UnixListener::bind(args.socket) {
+        Err(err) => panic!("Failed to bind to socket: {}.", err),
+        Ok(stream) => stream,
     };
 
-    pid.wait();
+    println!("Listening on `{}`. Is echo? {}.", args.socket, args.echo);
+
+    for mut stream in listener.incoming() {
+        match stream {
+            Ok(ref mut stream) => {
+                println!("New connection.");
+                let msg = read(stream);
+                println!("Client said: {}", msg);
+                if args.echo {
+                    stream.write_all(msg.as_bytes()).expect("Echo");
+                    println!("Sending echo back");
+                }
+            }
+            Err(err) => panic!("Error occured when listening from the stream. {}", err),
+        }
+    }
 }
