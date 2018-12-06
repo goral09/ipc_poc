@@ -1,11 +1,18 @@
 extern crate clap;
 extern crate commons;
+extern crate protobuf;
 
 use clap::{App, Arg};
 use commons::models::Person;
-use commons::networking::*;
-use std::io::prelude::*;
-use std::os::unix::net::UnixStream;
+use commons::networking::connect_or_panic;
+use protobuf::Message;
+
+fn to_person(name: &str, age: u32) -> Person {
+    let mut p = Person::new();
+    p.age = age;
+    p.name = name.to_string();
+    p
+}
 
 fn main() {
     let matches = App::new("rust_client")
@@ -17,21 +24,12 @@ fn main() {
     let socket = matches.value_of("socket").unwrap();
     let name = matches.value_of("name").unwrap();
     let age: u32 = matches.value_of("age").unwrap().parse().unwrap();
-    let mut person = Person::new();
-    person.age = age;
-    person.name = name.to_string();
+    let person = to_person(name, age);
 
-    let mut stream = match UnixStream::connect(socket) {
-        Err(err) => panic!("Failed to connect to socket {}.", err),
-        Ok(stream) => stream,
-    };
+    let mut stream = connect_or_panic(socket);
 
-    stream
-        .write_all(format!("{:?}", person).as_bytes())
-        .unwrap();
-    let msg_received = read(&mut stream);
-    println!("Received {} from server.", msg_received);
-
+    person.write_to_writer(&mut stream).unwrap();
+    println!("Finished sending a person.");
     use std::net::Shutdown;
 
     stream

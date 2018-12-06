@@ -7,5 +7,5 @@ authors = ["Mateusz Górski <gorski.mateusz@protonmail.ch>"]
 clap = "2.32.0"
 serde = "1.0.80"
 serde_derive = "1.0.80"
-ipc-channel = { git = "https://github.com/goral09/ipc-channel", branch = "socket_name_input" }
 commons = { path = "../commons" }
+protobuf = { git = "https://github.com/stepancheg/rust-protobuf/" }

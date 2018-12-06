@@ -20,6 +20,7 @@ dependencies = [
 name = "commons"
 version = "0.1.0"
 dependencies = [
+ "libc 0.2.44 (registry+https://github.com/rust-lang/crates.io-index)",
  "protobuf 3.0.0 (git+https://github.com/stepancheg/rust-protobuf/)",
  "protobuf-codegen 3.0.0 (git+https://github.com/stepancheg/rust-protobuf/)",
  "protoc-rust 3.0.0 (git+https://github.com/stepancheg/rust-protobuf/)",
