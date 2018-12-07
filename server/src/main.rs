@@ -41,6 +41,7 @@ fn main() {
                 println!("Client said: {:?}", msg);
                 msg.write_to_writer(stream)
                     .expect("Couldn't write back to client.");
+                stream.shutdown(std::net::Shutdown::Both).expect("Error when trying to shutdown the socket.");
             }
             Err(err) => panic!("Error occured when listening from the stream. {}", err),
         }
