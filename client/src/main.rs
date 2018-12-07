@@ -4,8 +4,9 @@ extern crate protobuf;
 
 use clap::{App, Arg};
 use commons::models::Person;
-use commons::networking::connect_or_panic;
+use commons::networking::{connect_or_panic, shutdown};
 use protobuf::Message;
+use std::net::Shutdown;
 use std::os::unix::net::UnixStream;
 
 fn to_person(name: &str, age: u32) -> Person {
@@ -19,15 +20,10 @@ fn send_and_receive<'a, M: Message + 'a>(msg: &'a M, stream: &mut UnixStream) {
     let mut socket_clone = stream.try_clone().expect("Couldn't clone socket.");
     msg.write_to_writer(stream).unwrap();
     println!("Finished sending...");
-    use std::net::Shutdown;
-    stream
-        .shutdown(Shutdown::Write)
-        .expect("Error when trying to shutdown write part of the socket.");
+    shutdown(stream, Shutdown::Write);
     let msg = protobuf::parse_from_reader::<Person>(&mut socket_clone).unwrap();
     println!("Received {:?}", msg);
-    stream
-        .shutdown(Shutdown::Read)
-        .expect("Error when trying to shutdown read part of the socket.");
+    shutdown(stream, Shutdown::Read);
 }
 
 fn main() {

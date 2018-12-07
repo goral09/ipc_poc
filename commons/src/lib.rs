@@ -8,7 +8,13 @@ pub mod models;
 pub mod networking {
     use std::io::Read;
     use std::os::unix::net::UnixStream;
+    use std::net::Shutdown;
 
+    pub fn shutdown<'a>(stream: &'a mut UnixStream, mode: Shutdown) {
+        stream
+            .shutdown(mode)
+            .expect("Error when trying to sthudown stream.")
+    }
     pub fn read(stream: &mut UnixStream) -> String {
         let mut s = Vec::new();
         stream.read_to_end(&mut s).unwrap();
@@ -32,5 +38,5 @@ pub mod networking {
             Err(err) => panic!("Failed to connect to socket {}.", err),
             Ok(stream) => stream,
         }
-        }
+    }
 }

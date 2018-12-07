@@ -5,6 +5,7 @@ extern crate serde;
 
 use clap::{App, Arg};
 use commons::models::Person;
+use commons::networking::shutdown;
 use protobuf::Message;
 use std::os::unix::net::UnixListener;
 
@@ -41,7 +42,7 @@ fn main() {
                 println!("Client said: {:?}", msg);
                 msg.write_to_writer(stream)
                     .expect("Couldn't write back to client.");
-                stream.shutdown(std::net::Shutdown::Both).expect("Error when trying to shutdown the socket.");
+                shutdown(stream, std::net::Shutdown::Both);
             }
             Err(err) => panic!("Error occured when listening from the stream. {}", err),
         }
