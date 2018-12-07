@@ -6,13 +6,28 @@ use clap::{App, Arg};
 use commons::models::Person;
 use commons::networking::connect_or_panic;
 use protobuf::Message;
-use std::io::Write;
+use std::os::unix::net::UnixStream;
 
 fn to_person(name: &str, age: u32) -> Person {
     let mut p = Person::new();
     p.age = age;
     p.name = name.to_string();
     p
+}
+
+fn send_and_receive<'a, M: Message + 'a>(msg: &'a M, stream: &mut UnixStream) {
+    let mut socket_clone = stream.try_clone().expect("Couldn't clone socket.");
+    msg.write_to_writer(stream).unwrap();
+    println!("Finished sending...");
+    use std::net::Shutdown;
+    stream
+        .shutdown(Shutdown::Write)
+        .expect("Error when trying to shutdown write part of the socket.");
+    let msg = protobuf::parse_from_reader::<Person>(&mut socket_clone).unwrap();
+    println!("Received {:?}", msg);
+    stream
+        .shutdown(Shutdown::Read)
+        .expect("Error when trying to shutdown read part of the socket.");
 }
 
 fn main() {
@@ -28,16 +43,5 @@ fn main() {
     let person = to_person(name, age);
 
     let mut stream = connect_or_panic(socket);
-    let mut sock_copy = stream.try_clone().expect("Couldn't copy socket.");
-
-    person.write_to_writer(&mut stream).unwrap();
-    stream.flush().unwrap();
-    println!("Finished sending a person.");
-    use std::net::Shutdown;
-    stream
-        .shutdown(Shutdown::Write)
-        .expect("Shutdown function.");
-
-    let msg = protobuf::parse_from_reader::<Person>(&mut sock_copy).unwrap();
-    println!("Received {:?}", msg);
+    send_and_receive(&person, &mut stream);
 }
