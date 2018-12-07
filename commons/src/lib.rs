@@ -2,23 +2,57 @@
 // we need to declare in the main module, that we are using them.
 #[macro_use]
 extern crate serde_derive;
+extern crate byteorder;
 extern crate protobuf;
 
 pub mod models;
 pub mod networking {
+    use byteorder::{ByteOrder, LittleEndian};
+    use protobuf::Message;
     use std::io::Read;
-    use std::os::unix::net::UnixStream;
+    use std::io::Write;
     use std::net::Shutdown;
+    use std::os::unix::net::UnixStream;
 
-    pub fn shutdown<'a>(stream: &'a mut UnixStream, mode: Shutdown) {
+    pub fn shutdown(stream: &mut UnixStream, mode: Shutdown) {
         stream
             .shutdown(mode)
             .expect("Error when trying to sthudown stream.")
     }
-    pub fn read(stream: &mut UnixStream) -> String {
-        let mut s = Vec::new();
-        stream.read_to_end(&mut s).unwrap();
-        String::from_utf8(s).unwrap()
+
+    pub fn serialize<M: Message>(msg: &M) -> Vec<u8> {
+        let msg_size = msg.compute_size();
+        let mut buf = [0u8; 4];
+        LittleEndian::write_u32(&mut buf, msg_size);
+        let mut result = Vec::with_capacity((msg_size + 4) as usize);
+        result.extend_from_slice(&buf);
+        let msg_bytes = msg.write_to_bytes().expect("Serialize message");
+        result.extend_from_slice(&msg_bytes);
+        result
+    }
+
+    pub fn send(bytes: &[u8], stream: &mut UnixStream) {
+        let bytes = stream.write(bytes).unwrap();
+        println!("Sent {} bytes.", bytes)
+    }
+
+    fn msg_size_fn<I: Iterator<Item = Result<u8, Error>>>(iter: &mut I) -> [u8; 4] {
+        let mut bs = [0u8; 4];
+        for i in 0..4 {
+            bs[i] = iter.next().unwrap().unwrap();
+        }
+        bs
+    }
+
+    fn consume_msg<I: Iterator<Item = Result<u8, Error>>>(iter: I, size: u32) -> Vec<u8> {
+        iter.take(size as usize).map(|r| r.unwrap()).collect()
+    }
+
+    pub fn read(stream: &mut UnixStream) -> Vec<u8> {
+        let mut bytes = stream.bytes();
+        let size_vec = msg_size_fn(&mut bytes);
+        let size = LittleEndian::read_u32(&size_vec);
+        consume_msg(bytes, size)
     }
 
     extern crate libc;

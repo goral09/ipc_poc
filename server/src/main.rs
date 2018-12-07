@@ -38,13 +38,14 @@ fn main() {
         match stream {
             Ok(ref mut stream) => {
                 println!("New connection.");
-                let msg = protobuf::parse_from_reader::<Person>(stream).unwrap();
-                println!("Client said: {:?}", msg);
-                msg.write_to_writer(stream)
-                    .expect("Couldn't write back to client.");
+                let data = commons::networking::read(stream);
+                let msg = protobuf::parse_from_bytes::<Person>(&data).unwrap();
+                println!("Client sent: {:?}", msg);
                 shutdown(stream, std::net::Shutdown::Both);
             }
             Err(err) => panic!("Error occured when listening from the stream. {}", err),
         }
     }
+
+    std::fs::remove_file(socket_path).unwrap();
 }

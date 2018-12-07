@@ -10,3 +10,4 @@ libc = "0.2.44"
 protobuf = { git = "https://github.com/stepancheg/rust-protobuf/" }
 protoc-rust = { git = "https://github.com/stepancheg/rust-protobuf/" }
 protobuf-codegen = { git = "https://github.com/stepancheg/rust-protobuf/" }
+byteorder = "1.2.7"
