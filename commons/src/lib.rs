@@ -32,5 +32,5 @@ pub mod networking {
             Err(err) => panic!("Failed to connect to socket {}.", err),
             Ok(stream) => stream,
         }
-    }
+        }
 }

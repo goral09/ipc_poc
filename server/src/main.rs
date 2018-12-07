@@ -3,10 +3,10 @@ extern crate commons;
 extern crate protobuf;
 extern crate serde;
 
-use commons::models::Person;
 use clap::{App, Arg};
-use std::os::unix::net::{UnixListener};
+use commons::models::Person;
 use protobuf::Message;
+use std::os::unix::net::UnixListener;
 
 fn main() {
     let matches = App::new("rust_server")
@@ -39,7 +39,8 @@ fn main() {
                 println!("New connection.");
                 let msg = protobuf::parse_from_reader::<Person>(stream).unwrap();
                 println!("Client said: {:?}", msg);
-                msg.write_to_writer(stream).expect("Couldn't write back to client.");
+                msg.write_to_writer(stream)
+                    .expect("Couldn't write back to client.");
             }
             Err(err) => panic!("Error occured when listening from the stream. {}", err),
         }

@@ -6,6 +6,7 @@ use clap::{App, Arg};
 use commons::models::Person;
 use commons::networking::connect_or_panic;
 use protobuf::Message;
+use std::io::Write;
 
 fn to_person(name: &str, age: u32) -> Person {
     let mut p = Person::new();
@@ -27,12 +28,16 @@ fn main() {
     let person = to_person(name, age);
 
     let mut stream = connect_or_panic(socket);
+    let mut sock_copy = stream.try_clone().expect("Couldn't copy socket.");
 
     person.write_to_writer(&mut stream).unwrap();
+    stream.flush().unwrap();
     println!("Finished sending a person.");
     use std::net::Shutdown;
-
     stream
         .shutdown(Shutdown::Write)
         .expect("Shutdown function.");
+
+    let msg = protobuf::parse_from_reader::<Person>(&mut sock_copy).unwrap();
+    println!("Received {:?}", msg);
 }
