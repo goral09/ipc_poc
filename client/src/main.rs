@@ -1,7 +1,7 @@
+extern crate byteorder;
 extern crate clap;
 extern crate commons;
 extern crate protobuf;
-extern crate byteorder;
 
 use clap::{App, Arg};
 use commons::models::Person;

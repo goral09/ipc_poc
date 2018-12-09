@@ -5,7 +5,7 @@ extern crate serde;
 
 use clap::{App, Arg};
 use commons::models::Person;
-use commons::networking::shutdown;
+use commons::networking::{send, shutdown, serialize};
 use protobuf::Message;
 use std::os::unix::net::UnixListener;
 
@@ -41,6 +41,8 @@ fn main() {
                 let data = commons::networking::read(stream);
                 let msg = protobuf::parse_from_bytes::<Person>(&data).unwrap();
                 println!("Client sent: {:?}", msg);
+                let bytes = serialize(&msg);
+                send(&bytes, stream);
                 shutdown(stream, std::net::Shutdown::Both);
             }
             Err(err) => panic!("Error occured when listening from the stream. {}", err),

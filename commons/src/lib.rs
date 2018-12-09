@@ -36,23 +36,24 @@ pub mod networking {
         println!("Sent {} bytes.", bytes)
     }
 
-    fn msg_size_fn<I: Iterator<Item = Result<u8, Error>>>(iter: &mut I) -> [u8; 4] {
+    fn msg_size<I: Iterator<Item = Result<u8, Error>>>(iter: &mut I) -> u32 {
         let mut bs = [0u8; 4];
         for i in 0..4 {
+            //TODO:: handle errors properly
             bs[i] = iter.next().unwrap().unwrap();
         }
-        bs
+        LittleEndian::read_u32(&bs)
     }
 
-    fn consume_msg<I: Iterator<Item = Result<u8, Error>>>(iter: I, size: u32) -> Vec<u8> {
-        iter.take(size as usize).map(|r| r.unwrap()).collect()
+    fn consume_msg<I: Iterator<Item = Result<u8, Error>>>(iter: I, size: usize) -> Vec<u8> {
+        iter.take(size).map(|r| r.unwrap()).collect()
     }
 
     pub fn read(stream: &mut UnixStream) -> Vec<u8> {
         let mut bytes = stream.bytes();
-        let size_vec = msg_size_fn(&mut bytes);
-        let size = LittleEndian::read_u32(&size_vec);
-        consume_msg(bytes, size)
+        let size = msg_size(&mut bytes);
+        println!("Msg size: {}", size);
+        consume_msg(bytes, size as usize)
     }
 
     extern crate libc;
