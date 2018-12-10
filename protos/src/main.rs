@@ -1,16 +1,11 @@
-extern crate protobuf_codegen;
-extern crate protoc_rust;
-
-pub use protobuf_codegen::Customize;
+extern crate protoc_rust_grpc;
 
 fn main() {
-    protoc_rust::run(protoc_rust::Args {
+    protoc_rust_grpc::run(protoc_rust_grpc::Args {
         out_dir: "../commons/src/",
         input: &["src/protos/models.proto"],
         includes: &["src/protos"],
-        customize: Customize {
-            serde_derive: Some(true),
-            ..Default::default()
-        },
+        rust_protobuf: true, // also generate protobuf messages, not just services
+        ..Default::default()
     }).expect("Problem generating protobuf classes");
 }

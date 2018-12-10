@@ -4,10 +4,9 @@ version = "0.1.0"
 authors = []
 
 [dependencies]
-serde = "1.0.80"
-serde_derive = "1.0.80"
 libc = "0.2.44"
-protobuf = { git = "https://github.com/stepancheg/rust-protobuf/" }
-protoc-rust = { git = "https://github.com/stepancheg/rust-protobuf/" }
-protobuf-codegen = { git = "https://github.com/stepancheg/rust-protobuf/" }
+protobuf = "2"
 byteorder = "1.2.7"
+grpc = "0.6.1"
+futures         = "0.1.8"
+futures-cpupool = "0.1.8"

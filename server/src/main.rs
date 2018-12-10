@@ -1,12 +1,14 @@
 extern crate clap;
 extern crate commons;
+extern crate futures;
+extern crate grpc;
 extern crate protobuf;
-extern crate serde;
 
 use clap::{App, Arg};
-use commons::models::Person;
-use commons::networking::{send, shutdown, serialize};
-use std::os::unix::net::UnixListener;
+use commons::models_grpc::RetrieveServiceServer;
+
+pub mod user_retriever;
+pub mod users;
 
 fn main() {
     let matches = App::new("rust_server")
@@ -19,34 +21,27 @@ fn main() {
         .get_matches();
 
     let socket = matches.value_of("socket").unwrap();
-    let echo = match matches.occurrences_of("e") {
-        0 => false,
-        _ => true,
-    };
 
     let socket_path = std::path::Path::new(socket);
     if socket_path.exists() {
         std::fs::remove_file(socket_path).unwrap();
     }
 
-    let unix_listener = UnixListener::bind(&socket_path).unwrap();
+    let mut server = grpc::ServerBuilder::new_plain();
+    server.http.set_unix_addr(socket.to_owned()).unwrap();
 
-    println!("Listening on `{}`. Is echo? {}.", socket, echo);
+    let users: Vec<_> = vec![
+        ("Donald", "Trump"),
+        ("Hilary", "Clinton"),
+        ("George", "W. Bush"),
+    ];
+    let user_retriever = user_retriever::UserRetriever::new(users::build_users_map(&users));
+    server.add_service(RetrieveServiceServer::new_service_def(user_retriever));
+    server.http.set_cpu_pool_threads(1);
 
-    for mut stream in unix_listener.incoming() {
-        match stream {
-            Ok(ref mut stream) => {
-                println!("New connection.");
-                let data = commons::networking::read(stream);
-                let msg = protobuf::parse_from_bytes::<Person>(&data).unwrap();
-                println!("Client sent: {:?}", msg);
-                let bytes = serialize(&msg);
-                send(&bytes, stream);
-                shutdown(stream, std::net::Shutdown::Both);
-            }
-            Err(err) => panic!("Error occured when listening from the stream. {}", err),
-        }
+    let _server = server.build().expect("Start server");
+
+    loop {
+        std::thread::park();
     }
-
-    std::fs::remove_file(socket_path).unwrap();
 }

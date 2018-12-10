@@ -1,11 +1,9 @@
-// In order to use the Serialize and Deserialize macros in the model,
-// we need to declare in the main module, that we are using them.
-#[macro_use]
-extern crate serde_derive;
 extern crate byteorder;
+extern crate grpc;
 extern crate protobuf;
 
 pub mod models;
+pub mod models_grpc;
 pub mod networking {
     use byteorder::{ByteOrder, LittleEndian};
     use protobuf::Message;
